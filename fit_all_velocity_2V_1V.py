@@ -1,33 +1,25 @@
-# from ElectricalUtils.ControlSignal import ControlSignal
-# from Visual.visualize import visualize
-from Utils.utils import utils
 import os
 import glob
 from scipy.optimize import curve_fit, differential_evolution
 from scipy.signal import savgol_filter
 from scipy.io import savemat
-from scipy.ndimage import uniform_filter1d
-# from easydict import EasyDict as edict
 import numpy as np
-# from tqdm import tqdm
-#import tensorflow as tf
 from matplotlib import pyplot as plt
-# from IPython.display import display, clear_output
 from os.path import join
 import argparse
-from Visual.visual_utils import set_ticks_label, set_legend
+import json
 import matplotlib
 import scipy.interpolate as interp
+from scipy.ndimage import uniform_filter1d
+# from easydict import EasyDict as edict
 
-# from MemModel.Chang import NonVolatileMemristor
 from mem_ZrAu_withPar_test_ import Memristor
-# from mem_ZrAu_withPar_sinh import Memristor
-# from mem_ZrAu_withPar_test_serie import Memristor
-# from mem_ZrAu_withPar_test_twoStateVar import Memristor
-
 # from Visual.plot_line import plot_twinx
+from Visual.visual_utils import set_ticks_label, set_legend
 from Utils.mean_over_same_voltageDC import mean_over_same_v
-from InitialParam4Fit.initial_param_fit_1871 import data_name, p0, input_type, bounds, maxfev, ftol
+from Utils.utils import utils
+
+
 
 g0V4=.3
 g0V2=.35
@@ -223,10 +215,10 @@ def load_data(dir_list, save_path):
     # Save path
     utils.ensure_dir(save_path)
     print('Save path:\n{:s}\n'.format(save_path))
-    np.save(root + '/I_list.npy', arr=I_list)
-    np.save(root + '/V_list.npy', arr=V_list)
-    np.save(root + '/time_list.npy', arr=time_list)
-    np.save(root + '/sweep_vel_list.npy', arr=sweep_vel_list)
+    np.save(save_path + '/I_list.npy', arr=I_list)
+    np.save(save_path + '/V_list.npy', arr=V_list)
+    np.save(save_path + '/time_list.npy', arr=time_list)
+    np.save(save_path + '/sweep_vel_list.npy', arr=sweep_vel_list)
 
     return np.array(time_list), np.array(V_list), np.array(I_list)
 
@@ -330,6 +322,13 @@ def set_model_multiple_sweep_for_verification(p, save_path=None):
     print(mem.par_PF)
     print(mem.par_Schottky_OFF)
 
+    with open(save_path+"par_state.json", "w") as outfile:
+        json.dump(mem.par_state, outfile)
+    with open(save_path+"par_PF.json", "w") as outfile:
+        json.dump(mem.par_PF, outfile)
+    with open(save_path+"par_Schottky_OFF.json", "w") as outfile:
+        json.dump(mem.par_Schottky_OFF, outfile)
+
     return np.array(curr_list)
 
 def take_firstquadrant_IV(time_list, V_list, I_list):
@@ -355,8 +354,9 @@ if __name__ == "__main__":
 
     root = os.getcwd()
     save_path_ = join(root, '{:s}/{:s}/'.format(args.save_path, args.input_type))
+    load_root = join(root + '/', 'Dati/{:s}/'.format(args.input_type))
 
-    load_root = join(root.rsplit('/', 1)[0]+'/', 'Dati/{:s}/'.format(args.input_type))
+    # load_root = join(root.rsplit('/', 1)[0]+'/', 'Dati/{:s}/'.format(args.input_type))
     # dir_list = sorted([d for d in glob.glob(load_root + "*/", recursive=True) if '.' not in d])
     # dir_list = sorted([d for d in glob.glob(load_root + "188*/", recursive=True) if '.' not in d])
 
@@ -458,10 +458,13 @@ if __name__ == "__main__":
         print('\nFit concluded. Best param:\n')
         print(best_val)
 
-    # Plot output of the fit
+    # Load param (and save in json to ease consultation)
     param = np.load('{:s}.npy'.format(save_path_fit + 'best_param'))
     print(param)
+    with open(save_path_fit + "g0_list.json", "w") as outfile:
+        json.dump({"g0V2": .35, "g0V1": .55}, outfile)
 
+    # Plot output of the fit
     i_fit = set_model_multiple_sweep_for_verification(save_path=save_path_fit, p=param)
 
     plot_multiple_IV(V_list=V_list, I_list=i_fit, time_list=time_list,

@@ -118,7 +118,7 @@ def plot_twinx_scatter(x_data, x_label, y_data, y_label, y2_data=[], y2_label=No
     plt.tight_layout()
 
     if save_path:
-        if format is 'svg':
+        if format == 'svg':
             plt.savefig(save_path + figname + '.svg', format='svg', dpi=1200)
         else:
             plt.savefig(save_path + figname+'.png')

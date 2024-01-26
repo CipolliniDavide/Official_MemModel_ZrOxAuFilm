@@ -3,7 +3,6 @@
 """
 Created on Wed Aug 18 15:25:33 2021
 
-@author: hp
 """
 
 
