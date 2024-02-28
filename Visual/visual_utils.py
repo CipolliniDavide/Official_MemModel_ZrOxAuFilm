@@ -39,6 +39,8 @@ def set_legend(ax, title='', ncol=1, loc=0):
     myfont2 = mpl.font_manager.FontProperties(fname='/System/Library/Fonts/Supplemental/Arial Bold.ttf')
     lg = ax.legend(fontsize="x-large", title=title, title_fontsize='xx-large', ncol=ncol, loc=loc)
     title = lg.get_title()
+    for lh in lg.legendHandles:
+        lh.set_alpha(1)
     title.set_fontsize('xx-large')
     title.set_weight('bold')
     # l.set_title(title=title, prop=myfont2)

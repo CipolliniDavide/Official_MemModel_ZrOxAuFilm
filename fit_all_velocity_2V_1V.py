@@ -20,7 +20,7 @@ from Utils.mean_over_same_voltageDC import mean_over_same_v
 from Utils.utils import utils
 
 
-
+# Initial guess for the internal variable of the memristor
 g0V4=.3
 g0V2=.35
 g0V1=.55
@@ -202,14 +202,20 @@ def load_data(dir_list, save_path):
         V_list.append(V)
         time_list.append(time)
 
+    y_lim = (-.26, .26)
     plot_multiple_IV(V_list=as_measured_V, I_list=as_measured_I, time_list=as_measured_time,
-                     save_path=save_path_fit, title='AsMeasured',
+                     save_path=save_path_fit,
+                     # title='AsMeasured',
+                     y_lim=y_lim,
                      color_list=color_list,
-                     alpha_list=alpha_list,
-                     name_fig='asMeasured', ticks=[.21, .1, 0, -.1, -.21])
+                     alpha_list=np.array(alpha_list)*.05,
+                     name_fig='asMeasured',
+                     ticks=[.21, .1, 0, -.1, -.21])
     plot_multiple_IV(V_list=V_list, I_list=I_list, time_list=time_list,
                      color_list=color_list,
-                     save_path=save_path_fit, title='AfterPreprocessing',
+                     y_lim=y_lim,
+                     save_path=save_path_fit,
+                     # title='AfterPreprocessing',
                      name_fig='AfterPreprocessing', ticks=[.21, .1, 0, -.1, -.21])
 
     # Save path
@@ -223,7 +229,8 @@ def load_data(dir_list, save_path):
     return np.array(time_list), np.array(V_list), np.array(I_list)
 
 def plot_multiple_IV(V_list, I_list, time_list, color_list=['orange', 'blue', 'green'][::-1], alpha_list=[1, .4, .4],
-                     save_path='./', name_fig='', ticks=[.21, .1, 0, -.1, -.21], title=None):
+                     save_path='./', name_fig='', ticks=[.21, .1, 0, -.1, -.21], title=None,
+                     y_lim=None):
 
     i_label = r'I [$\mathbf{\mu}$A]'
     fig, ax = plt.subplots()
@@ -244,6 +251,8 @@ def plot_multiple_IV(V_list, I_list, time_list, color_list=['orange', 'blue', 'g
     if title:
         plt.title(title)
     set_legend(ax=ax, title='Sweep velocity')
+    if y_lim:
+        ax.set_ylim(y_lim)
     plt.tight_layout()
     plt.savefig('{:s}/IV_{:s}.svg'.format(save_path, name_fig))
     plt.show()
