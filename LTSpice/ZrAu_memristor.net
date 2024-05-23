@@ -1,0 +1,60 @@
+
+
+.SUBCKT memristor 1 2 w params:
+
+*Parameters:
+*State variable:
+.ic V(w) = .35
+.param wmax=1 wmin=0
+.param lambda=1.2e-3 v_p=3.6 v_n=3.2
+.param cp={1}
+*auxiliary functions to limit the range of state variable
+.func sign2(var) {(sgn(var)+1)/2}
+.func trunc(var1,var2) {sign2(var1)*sign2(wmax-var2)+sign2(-var1)*sign2(var2-wmin)}
+
+* Param PF:
+.param B=8.1e-8 c=8.6e5 s=.14 eta=28.1 z=7.7
+*auxiliary functions to compute PF
+.func PF(eta, z, s, c, B, V) {.5*exp(-eta+z*sqrt(V))*(1+(s/c)*exp(eta-z*sqrt(V))) *(sqrt(1+( 4*s*(c-1)*exp(eta-z*sqrt(V)))/(c*pow(1+(s/c)*exp(eta-z*sqrt(V)),2)))-1)*B}
+
+* Param Schottky:
+*alpha is prefactor for Schottky barrier
+*beta is exponent for Schottky barrier
+.param A=3.3e-12 gamma=2.4
+.func Schottky(alpha, beta, V) {alpha*(exp(beta*sqrt(V))-1)}
+
+Cpvar w 0 {cp}
+*rate equation considering the diffusion effect
+Gx 0 w value={-trunc(-V(1,2), cp*V(w))*lambda*(exp(V(1,2)/v_p) - exp(-V(1,2)/v_n))}
+
+***************************************************************************
+*Output:
+Gw 1 2 value={if(cp*V(1,2)>=0, (1-cp*V(w))*Schottky(A, gamma, V(1,2)) + (cp*V(w))*V(1,2)*PF(eta, z, s, c, B, V(1,2)), -((1-cp*V(w))*abs(V(1,2))*PF(eta, z, s, c, B, abs(V(1,2))) + (cp*V(w))*Schottky(A, gamma, abs(V(1,2))) ))}
+
+.ENDS memristor
+
+*+ cp*V(w)*V(1,2)*PF(eta, z, s, c, B, V(1,2))
+*-((1-cp*V(s))*abs(V(1,2))*PF(eta, z, s, c, B, abs(V(1,2))) + (cp*V(s))*Schottky(A, gamma, abs(V(1,2))) ))
+
+
+*+ wmax=1 wmin=0
+
+
+*.param pf=.5*exp(-eta+z*sqrt(V(1,2))) * ( 1+(s/c)*exp( eta-z*sqrt(V(1,2)) ) )*(sqrt( 1+( 4*s*(c-1)*exp(eta-z*sqrt(V(1,2))) )/(c*pow(1+(s/c)*exp(eta-z*sqrt(V(1,2))),2)) )-1) * B
+
+*Gw 1 2 value={(1-cp*V(s))*alpha*(1-exp(-beta*sqrt(V(1,2)))) + (cp*V(s))*V(1,2)*.5*exp(-eta+z*sqrt(V(1,2))) * ( 1+(s/c)*exp( eta-z*sqrt(V(1,2)) ) )*(sqrt( 1+( 4*s*(c-1)*exp(eta-z*sqrt(V(1,2))) )/(c*pow(1+(s/c)*exp(eta-z*sqrt(V(1,2))),2)) )-1) * B}
+
+
+*Gx 0 s value={trunc(V(1,2),cp*V(s))*lambda*(exp(eta1*V(1,2)) - exp(-eta2*V(1,2)))-cp*V(s)/tau}
+*rate equation without the diffusion effect
+*Gx 0 s value={-trunc(V(1,2), cp*V(s))*lambda*(exp(V(1,2)/v_p) - exp(-V(1,2)/v_n))}
+
+*Gw 1 2 value={if(cp*V(s)>=0, (1-cp*V(s))*Schottky(A, gamma, V(1,2)) + (cp*V(s))*PF(eta, z, s, c, B, V(1,2)), (1-cp*V(s))*PF(eta, z, s, c, B, abs(V(1,2))) + (cp*V(s))*Schottky(A, gamma, abs(V(1,2))) )}
+
+*Gw 1 2 value={(1-cp*V(s))*Schottky(A, gamma, V(1,2)) }
+*Gw 1 2 value={ (cp*V(s))*V(1,2)*PF(eta, z, s, c, B, V(1,2))}
+*Gw 1 2 value={ V(1,2)*PF(eta, z, s, c, B, V(1,2))}
+*Gw 1 2 value={Schottky(A, gamma, V(1,2)) }
+
+*Gw 1 2 value={ (cp*V(s))*V(1,2)*PF(eta, z, s, c, B, V(1,2)) + (1-cp*V(s))*Schottky(A, gamma, V(1,2))}
+

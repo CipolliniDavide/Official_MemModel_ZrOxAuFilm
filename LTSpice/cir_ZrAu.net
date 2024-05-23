@@ -1,0 +1,19 @@
+* Simulation of ZrAu model
+
+*Pulse          V1 V2 Tdelay Trise Tfall Ton Period Ncycles)
+V1 N001 0 PULSE(-20 20 0 17.5 17.5 0 0 10)
+*V1 N001 0 PULSE(0 20 0 8.6 8.6 0 0 10)
+
+XX1 N001 0 w memristor
+*D1 N001 0 1N4148
+*R1 Vout 0 1k
+*D2 Vout N002 1N4148
+
+.lib /Users/dav/Documents/LTspice/ZrOxAu/mem_models/ZrAu_memristor_test.net
+
+.tran 0 35
+.backanno
+
+*.plot .tran V(n001) Ix(x1:2)
+
+.end
